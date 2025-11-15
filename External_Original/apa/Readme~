@@ -1,0 +1,13 @@
+ 1393  2023-11-17 16:20:08 cat ../splice/batch1_aligned_bam.list ../splice/batch2_aligned_bam.list  > batch1_batch2_aligned_bam.list
+ 1489  2023-11-18 10:54:57 perl run_apa.pl test
+ 1803  2023-11-22 08:24:13 rm *.slum
+ 1830  2023-11-22 08:44:18 sed 's/\.Aligned\.sortedByCoord\.out\.md\.bam//g' ../expression/batch1_batch2_aligned_bam.list.used |cat | parallel --colsep "\t" -q echo grep \'"^Mapped Reads\b"\' {3}.metrics.tsv \|awk \''{print"wig/{2}.wig""\t"$3}'\' |bash  > mapping_wig_location_with_depth.txt
+ 1832  2023-11-22 08:45:05 cp /nobackup/sbcs/chenz27/CRC_TWAS/Asian-APA/Gencode_19_3UTR_annotation.bed.v2 .
+ 1834  2023-11-22 08:45:17 cp /nobackup/sbcs/chenz27/CRC_TWAS/Asian-APA/Gencode_19_GeneAnnotation.bed ./
+ 1837  2023-11-22 08:46:11 cp /nobackup/sbcs/chenz27/CRC_TWAS/Asian-APA/chrList.txt ./
+ 1839  2023-11-22 08:46:34 cp /nobackup/sbcs/chenz27/CRC_TWAS/Asian-APA/asian_CRC_APA_configure.txt2  ./
+ 1841  2023-11-22 08:48:09 mv asian_CRC_APA_configure.txt2  asian_CRC_Adenoma_APA_configure.txt
+ 1845  2023-11-22 08:54:06 cp /nobackup/sbcs/chenz27/CRC_TWAS/Asian-APA/Gencode_19_3UTR_annotation.bed .
+ 1850  2023-11-22 08:55:04  ls /nobackup/sbcs/chenz27/Adenoma_RNA-seq/processed/apa/wig/*.wig |cat | tr '\n' ','|sed 's/,$/\n/'  >> asian_CRC_Adenoma_APA_configure.txt 
+ 1855  2023-11-22 08:58:01 mv asian_CRC_Adenoma_APA_configure.txt asian_Adenoma_APA_configure.txt
+ 1820  2023-12-15 09:52:08 cat output_*/Adenoma_APA_Asian_result_temp.*.txt > CRC_adenoma_190samples_APA.txt

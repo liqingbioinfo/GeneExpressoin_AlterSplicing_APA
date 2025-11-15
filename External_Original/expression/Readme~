@@ -1,0 +1,28 @@
+ awk '{print "batch1""\t"NR"\t"$0}' batch1_sample.list > batch1_sample.list.v2
+ awk '{print "batch2""\t"NR"\t"$0}' batch2_sample.list > batch2_sample.list.v2
+ 
+ ls batch1/*/*metrics.tsv > metrics.list
+ ls batch2/*/*metrics.tsv >> metrics.list
+ bash qc.sh
+
+
+ # combined gene expression of samples included (190 samples)
+ ls /nobackup/sbcs/chenz27/Adenoma_RNA-seq/processed/batch1/*/*gene_reads.gct |perl -F"\t" -lane 'if(/(L01-Ts-\d+A)/){print "batch1\t$1\t$_"}' > gene_reads.list
+ ls /nobackup/sbcs/chenz27/Adenoma_RNA-seq/processed/batch2/*/*gene_reads.gct |perl -F"\t" -lane 'if(/(L01-Ts-\d+A)/){print "batch2\t$1\t$_"}'  >> gene_reads.list
+ ls /nobackup/sbcs/chenz27/Adenoma_RNA-seq/processed/batch1/*/*gene_tpm.gct |perl -F"\t" -lane 'if(/(L01-Ts-\d+A)/){print "batch1\t$1\t$_"}' > gene_tpm.list
+ ls /nobackup/sbcs/chenz27/Adenoma_RNA-seq/processed/batch2/*/*gene_tpm.gct |perl -F"\t" -lane 'if(/(L01-Ts-\d+A)/){print "batch2\t$1\t$_"}'  >> gene_tpm.list 
+ compNcol.hash.pl -c 1,2 -q batch1_batch2_qc.txt.used.samples -d 1,2 -db gene_reads.list -e|cut -f 5 > gene_reads.list.used 
+ compNcol.hash.pl -c 1,2 -q batch1_batch2_qc.txt.used.samples -d 1,2 -db gene_tpm.list -e |cut -f 5 >gene_tpm.list.used 
+ python combine_GCTs.py gene_reads.list.used CRC_adenoma_190samples_count
+ python combine_GCTs.py gene_tpm.list.used CRC_adenoma_190samples_tpm
+ perl -F"\t" -lane 'print "$F[1]\t$F[1]"' batch1_batch2_qc.txt.used.samples|sed '1i sample_id\tparticipant_id' > batch1_batch2_qc.txt.used.samples.list
+ 
+ # toolconda with ptyhon 3.8 and numpy (v1.20.2)
+ 
+ python3.8  eqtl_prepare_expression.py  CRC_adenoma_190samples_tpm.gct.gz  CRC_adenoma_190samples_count.gct.gz /nobackup/sbcs/chenz27/New_Public_data/STAR-index/hg19_star_2.7.11/150bp/gencode.v19.annotation.patched_contigs.genes.gtf batch1_batch2_qc.txt.used.samples.list  chr.list CRC_adenoma_190samples_QN --tpm_threshold 0.1 --count_threshold 6 --sample_frac_threshold 0.2 --normalization_method qn
+
+ # align bam files for splice and apa
+ 
+ ls /nobackup/sbcs/chenz27/Adenoma_RNA-seq/processed/expression/batch*/*/*.Aligned.sortedByCoord.out.md.bam |awk -F"/" '{print $8"\t"$9"\t"$0}' > batch1_batch2_aligned_bam.list
+ compNcol.hash.pl -c 1,2 -q batch1_batch2_qc.txt.used.samples  -d 1,2 -db batch1_batch2_aligned_bam.list -e|cut -f 3-5 > batch1_batch2_aligned_bam.list.used
+ parallel --colsep "\t" -q echo regtools junctions extract -a 8 -m 50 -M 500000 -s 0 {3} \| gzip -c \> {1}_junc/{2}.regtools_junc.txt.gz  :::: batch1_batch2_aligned_bam.list|parallel -j 8 bash -c 
